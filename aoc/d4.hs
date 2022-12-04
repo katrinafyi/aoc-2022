@@ -3,14 +3,22 @@ import AocLib
 import Data.List
 import Data.Maybe
 import Data.Foldable
-import Data.Bifunctor
 
-type In = [[(Int, Int)]]
+import Text.ParserCombinators.ReadP
 
-parseLine :: String -> [(Int,Int)]
-parseLine s = take2 <$> fmap read <$> split '-' <$> split ',' s
+type In = [[(Integer, Integer)]]
 
-contains :: (Int,Int) -> (Int,Int) -> Bool 
+parseLine :: String -> [(Integer,Integer)]
+parseLine = readp $ sepBy1 interval (char ',')
+  where 
+    interval = do 
+      a <- uint 
+      char '-'
+      b <- uint 
+      pure (a,b)
+
+
+contains :: (Integer,Integer) -> (Integer,Integer) -> Bool 
 contains (x,y) (a,b) = x <= a && b <= y
 
 parse :: String -> In
@@ -20,7 +28,7 @@ one = length . filter go
   where go [x,y] = x `contains` y || y `contains` x
 
 
-overlap :: (Int,Int) -> (Int,Int) -> Int
+overlap :: (Integer,Integer) -> (Integer,Integer) -> Integer
 overlap (x,y) (a,b) = (min y b - max x a + 1) `max` 0
 
 -- two :: In -> Int
