@@ -1,7 +1,9 @@
 module AocLib where
 
 import Data.Char
+import Data.List
 import Data.Functor
+import Data.Function
 import Text.ParserCombinators.ReadP
 
 chunks :: Int -> [a] -> [[a]]
@@ -31,6 +33,15 @@ int :: ReadP Integer
 int = do 
   sign <- option 1 (char '-' $> (-1))
   (* sign) <$> uint
+
+ints :: String -> [Int]
+ints = fmap read . filter (digit . head) . groupBy ((==) `on` digit)
+  where 
+    digit x = isDigit x || x `elem` "+-"
+
+line :: ReadP String 
+line = munch (/= '\n')
+
 
 readp :: Show a => ReadP a -> String -> a 
 readp p s = case readP_to_S (p <* eof) s of 
