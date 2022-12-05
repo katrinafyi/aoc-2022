@@ -32,8 +32,8 @@ int = do
   sign <- option 1 (char '-' $> (-1))
   (* sign) <$> uint
 
-readp :: ReadP a -> String -> a 
+readp :: Show a => ReadP a -> String -> a 
 readp p s = case readP_to_S (p <* eof) s of 
   [(x,[])] -> x
-  _:_ -> error "readp error: ambiguous parse"
   [] -> error "readp error: no successful parse"
+  x -> error $ "readp error: ambiguous parse " ++ show x
