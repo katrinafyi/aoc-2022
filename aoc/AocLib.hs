@@ -12,6 +12,10 @@ chunks n xs =
   let (ys, zs) = splitAt n xs
   in  ys : chunks n zs
 
+sliding :: Int -> [a] -> [[a]]
+sliding _ [] = []
+sliding n (x:xs) = take n (x:xs) : sliding n xs
+
 splitBy :: (a -> Bool) -> [a] -> [[a]]
 splitBy p s = 
   case dropWhile p s of
