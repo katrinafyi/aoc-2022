@@ -20,72 +20,69 @@ type Path = [String] --deriving (Eq, Ord, Show)
 data File = File Int Path deriving (Eq, Ord, Show)
 data Dir = Dir Int [Dir] [File] deriving (Eq, Ord, Show)
 
+class Size a where 
+  size :: a -> Int
+instance Size File where 
+  size (File n _) = n 
+instance Size Dir where 
+  size (Dir n _ _) = n
 
-data Cmd = Cd Path | Ls Path [Path] [File] deriving (Eq, Ord, Show)
+data Cd = Cd Path deriving (Eq, Ord, Show)
+data Ls = Ls Path [Path] [File] deriving (Eq, Ord, Show)
 
-parseCd :: Path -> ReadP Cmd
 parseCd p = do 
   string "cd "
-  a <- line 
-  char '\n'
-  pure $ Cd $ case a of 
+  l <- line'
+  pure $ case l of 
     "/" -> [] 
     ".." -> tail p 
     x -> x : p 
 
 parseDir p = do 
   string "dir "
-  l <- line 
-  char '\n'
+  l <- line'
   pure $ (l : p)
 
 parseFile p = do 
   s <- fromInteger <$> uint 
   char ' '
-  l <- line
-  char '\n'
+  l <- line'
   pure $ File s (l : p)
 
 parseLs p = do 
   string "ls\n"
-  items <- many $
-    (Left <$> parseDir p) +++ (Right <$> parseFile p)
+  items <- many $ eitherA (parseDir p) (parseFile p)
   let (dirs,files) = partitionEithers items
   pure $ Ls p dirs files 
 
-cd _ (Cd p) = p 
-cd p _ = p
-
 parseCommands p = (eof $> []) +++ do 
   string "$ "
-  cmd <- parseCd p +++ parseLs p 
-  (cmd :) <$> parseCommands (cd p cmd)
+  cmd <- eitherA (parseCd p) (parseLs p)
+  case cmd of 
+    Left p -> parseCommands p 
+    Right ls -> (ls :) <$> parseCommands p 
 
 parse = readp $ do 
   parseCommands []
 
-fileSize (File n _) = n
-dirSize (Dir n _ _) = n
-
-makeDisk :: [Cmd] -> Map.Map Path Dir
+makeDisk :: [Ls] -> Map.Map Path Dir
 makeDisk = foldr' (flip go) Map.empty 
   where
     reify disk ds = (disk !) <$> ds
 
-    go disk (Cd _) = disk
     go disk (Ls p ds fs) = 
-      Map.insert p (Dir size ds' fs) disk
+      Map.insert p (Dir sz ds' fs) disk
       where 
         ds' = reify disk ds
-        size = sum $ (dirSize <$> ds') ++ (fileSize <$> fs)
+        sz = sum $ fmap size ds' ++ fmap size fs
 
-one = sum . filter (<= 100000) . fmap dirSize . Map.elems
+one = sum . filter (<= 100000) . fmap size . Map.elems
 
 total = 70000000
 
-two disk = filter (>= need) . sort . fmap dirSize . Map.elems $ disk
+two disk = filter (>= need) . sort . fmap size . Map.elems $ disk
   where 
-    free = total - (dirSize $ disk ! [])
+    free = total - (size $ disk ! [])
     need = 30000000 - free
 
 

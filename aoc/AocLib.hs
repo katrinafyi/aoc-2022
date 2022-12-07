@@ -4,6 +4,7 @@ import Data.Char
 import Data.List
 import Data.Functor
 import Data.Function
+import Control.Applicative
 import Text.ParserCombinators.ReadP
 
 chunks :: Int -> [a] -> [[a]]
@@ -46,6 +47,10 @@ ints = fmap read . filter (digit . head) . groupBy ((==) `on` digit)
 line :: ReadP String 
 line = munch (/= '\n')
 
+line' = line <* char '\n'
+
+eitherA :: Alternative f => f a -> f b -> f (Either a b)
+eitherA a b = (Left <$> a) <|> (Right <$> b)
 
 readp :: Show a => ReadP a -> String -> a 
 readp p s = case readP_to_S (p <* eof) s of 
