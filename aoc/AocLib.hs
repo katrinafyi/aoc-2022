@@ -31,13 +31,21 @@ take2 :: [a] -> (a,a)
 take2 [x,y] = (x,y)
 take2 _ = error "required two elements"
 
-uint :: ReadP Integer 
+uinteger :: ReadP Integer 
+uinteger = read <$> munch1 isDigit
+
+integer :: ReadP Integer 
+integer = do 
+  sign <- option 1 (char '-' $> (-1))
+  (* sign) <$> uinteger
+
+uint :: ReadP Int
 uint = read <$> munch1 isDigit
 
-int :: ReadP Integer 
+int :: ReadP Int
 int = do 
-  sign <- option 1 (char '-' $> (-1))
-  (* sign) <$> uint
+  sign <- option id (char '-' $> negate)
+  sign <$> uint
 
 ints :: String -> [Int]
 ints = fmap read . filter (digit . head) . groupBy ((==) `on` digit)

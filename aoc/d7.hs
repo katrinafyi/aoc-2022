@@ -44,7 +44,7 @@ parseDir p = do
   pure $ (l : p)
 
 parseFile p = do 
-  s <- fromInteger <$> uint 
+  s <- uint
   char ' '
   l <- line'
   pure $ File s (l : p)

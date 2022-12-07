@@ -12,9 +12,9 @@ parseLine :: String -> [(Integer,Integer)]
 parseLine = readp $ sepBy1 interval (char ',')
   where 
     interval = do 
-      a <- uint 
+      a <- uinteger 
       char '-'
-      b <- uint 
+      b <- uinteger 
       pure (a,b)
 
 
