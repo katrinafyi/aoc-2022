@@ -27,7 +27,6 @@ instance Size File where
 instance Size Dir where 
   size (Dir n _ _) = n
 
-data Cd = Cd Path deriving (Eq, Ord, Show)
 data Ls = Ls Path [Path] [File] deriving (Eq, Ord, Show)
 
 parseCd p = do 
@@ -92,5 +91,6 @@ main = do
   let inp = parse d
   let disk = makeDisk inp
   print $ inp
+  print $ disk
   print $ one disk
   print $ two disk
