@@ -46,42 +46,34 @@ parseFile p = do
   s <- uint
   char ' '
   l <- line'
-  pure $ File s (l : p)
+  pure $ File s <$> tails p
 
 parseLs p = do 
   string "ls\n"
   items <- many $ eitherA (parseDir p) (parseFile p)
   let (dirs,files) = partitionEithers items
-  pure $ Ls p dirs files 
+  pure $ concat files 
 
 parseCommands p = (eof $> []) +++ do 
   string "$ "
   cmd <- eitherA (parseCd p) (parseLs p)
   case cmd of 
     Left p -> parseCommands p 
-    Right ls -> (ls :) <$> parseCommands p 
+    Right ls -> (ls ++) <$> parseCommands p 
 
 parse = readp $ do 
   parseCommands []
 
-makeDisk :: [Ls] -> Map.Map Path Dir
-makeDisk = foldr' (flip go) Map.empty 
-  where
-    reify disk ds = (disk !) <$> ds
+makeDisk :: [File] -> Map.Map Path Int
+makeDisk = Map.fromListWith (+) . fmap (\(File s p) -> (p, s))
 
-    go disk (Ls p ds fs) = 
-      Map.insert p (Dir sz ds' fs) disk
-      where 
-        ds' = reify disk ds
-        sz = sum $ fmap size ds' ++ fmap size fs
-
-one = sum . filter (<= 100000) . fmap size . Map.elems
+one = sum . filter (<= 100000) . Map.elems
 
 total = 70000000
 
-two disk = filter (>= need) . sort . fmap size . Map.elems $ disk
+two disk = filter (>= need) . sort . Map.elems $ disk
   where 
-    free = total - (size $ disk ! [])
+    free = total - (disk ! [])
     need = 30000000 - free
 
 
