@@ -37,7 +37,7 @@ parse = concatMap p . lines
 
 -- ROW COLUMN
 type P = (Int,Int)
-data S = S { h :: P, t :: P, seen :: Set P} deriving Show
+data S = S { rope :: [P], seen :: Set P} deriving Show
 
 (x,y) |+| (a,b) = (x+a,y+b)
 (x,y) |-| (a,b) = (x-a,y-b)
@@ -55,35 +55,28 @@ move d = (|+| delta d)
 
 clamp x = (-1) `max` (1 `min` x)
 
-follow :: State S () 
-follow = do
-  s@(S h t seen) <- get
-  let (dr,dc) = h |-| t
+follow :: P -> P -> P
+follow h t = 
+  let (dr,dc) = h |-| t in
   if abs dr `max` abs dc <= 1 then 
-    pure () 
-  else do
-    let diff = (clamp dr, clamp dc)
-    put $ s { t = t |+| diff}
+    t
+  else 
+    t |+| (clamp dr, clamp dc)
 
-see :: State S () 
-see = do 
-  modify $ \s -> s { seen = Set.insert (t s) (seen s) }
-
-step :: Dir -> State S S
+step :: Dir -> State S ()
 step d = do 
-  s@(S h t seen) <- get
-  put $ s { h = move d h}
-  s@(S h t seen) <- get
-  follow
-  see
-  get
+  (S r seen) <- get
+  let (h:t) = r
+  let rope = move d h : t
+  let rope' = scanl1 follow rope
+  let seen' = Set.insert (last rope') seen
+  modify $ \s -> s { seen = seen', rope = rope' }
 
-state0 = S z z (Set.singleton z)
+state0 n = S (replicate n z) (Set.singleton z)
   where z = (0,0)
 
-one ds = length seen
-  where S _ _ seen = execState (traverse step ds) state0
-two = const 0
+one ds = length $ seen $ execState (traverse step ds) (state0 2)
+two ds = length $ seen $ execState (traverse step ds) (state0 10)
 
 main :: IO ()
 main = do
