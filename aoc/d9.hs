@@ -18,12 +18,6 @@ import Control.Monad.State.Strict
 import Text.ParserCombinators.ReadP ()
 import qualified Text.ParserCombinators.ReadP as P
 
-grid :: [[a]] -> [[((Int,Int),a)]]
-grid arg = do
-  (r,row) <- zip [0..] arg
-  pure [((r,c),x) | (c,x) <- zip [0..] row]
-
-
 data Dir = U | D | L | R deriving (Eq, Show)
 
 parse = concatMap p . lines 
@@ -41,8 +35,6 @@ type Rope = [P]
 
 (x,y) |+| (a,b) = (x+a,y+b)
 (x,y) |-| (a,b) = (x-a,y-b)
-norm (x,y) = abs x + abs y
-
 
 delta :: Dir -> P
 delta U = (-1,0)
@@ -53,35 +45,32 @@ delta R = (0,1)
 move :: Dir -> P -> P
 move d = (|+| delta d)
 
-clamp x = (-1) `max` (1 `min` x)
-
 follow :: P -> P -> P
 follow h t = 
   let (dr,dc) = h |-| t in
   if abs dr `max` abs dc <= 1 then 
     t
   else 
-    t |+| (clamp dr, clamp dc)
+    t |+| (signum dr, signum dc)
 
-step :: Dir -> State Rope P
-step d = do 
-  modify $ \(h:t) -> move d h : t
-  modify $ scanl1 follow 
-  last <$> get
-
+step :: Rope -> Dir -> Rope
+step (h:t) d = do 
+  scanl1 follow (move d h : t)
 
 state0 n = replicate n z
   where z = (0,0)
 
-simulate n ds = evalState (traverse step ds) (state0 n)
-one ds = length $ Set.fromList $ simulate 2 ds
-two ds = length $ Set.fromList $ simulate 10 ds
+simulate :: Int -> [Dir] -> [Rope]
+simulate n = scanl step (state0 n)
+
+visited :: [[P]] -> Set P
+visited = Set.fromList . fmap last
+
+one ds = length $ visited $ simulate 2 ds
+two ds = length $ visited $ simulate 10 ds
 
 main :: IO ()
 main = do
-  d <- getContents
-  let inp = parse d
-  print $ inp
+  inp <- parse <$> getContents
   print $ one inp
-  -- print $ one inp
   print $ two inp
