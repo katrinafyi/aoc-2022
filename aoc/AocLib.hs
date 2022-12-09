@@ -31,6 +31,26 @@ take2 :: [a] -> (a,a)
 take2 [x,y] = (x,y)
 take2 _ = error "required two elements"
 
+tweak :: (a -> a) -> [a] -> [a]
+tweak _ [] = [] 
+tweak f (x:xs) = f x : xs
+
+indexed :: [a] -> [(Int,a)]
+indexed = zip [0..]
+
+indexed2 :: [[a]] -> [[((Int,Int),a)]]
+indexed2 = fmap go . indexed
+  where
+    go (r,row) = (\(c,x) -> ((r,c),x)) <$> indexed row
+
+instance (Num a, Num b) => Num (a,b) where 
+  (x,y) + (a,b) = (x+a,y+b)
+  (x,y) - (a,b) = (x-a,y-b)
+  (x,y) * (a,b) = (x*a,y*b)
+  abs (x,y) = (abs x, abs y)
+  signum (x,y) = (signum x, signum y)
+  fromInteger x = (fromInteger x,fromInteger x)
+
 uinteger :: ReadP Integer 
 uinteger = read <$> munch1 isDigit
 

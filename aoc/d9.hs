@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 import AocLib
 
 import Debug.Trace
@@ -18,23 +20,16 @@ import Control.Monad.State.Strict
 import Text.ParserCombinators.ReadP ()
 import qualified Text.ParserCombinators.ReadP as P
 
-data Dir = U | D | L | R deriving (Eq, Show)
+data Dir = U | D | L | R deriving (Eq, Show, Read)
 
+parse :: String -> [Dir]
 parse = concatMap p . lines 
   where 
-    letter "L" = L 
-    letter "U" = U 
-    letter "R" = R 
-    letter "D" = D
-    p l = replicate (read n) (letter d)
-      where [d,n] = words l 
+    p (words -> [d,n]) = replicate (read n) (read d)
 
 -- ROW COLUMN
 type P = (Int,Int)
 type Rope = [P]
-
-(x,y) |+| (a,b) = (x+a,y+b)
-(x,y) |-| (a,b) = (x-a,y-b)
 
 delta :: Dir -> P
 delta U = (-1,0)
@@ -43,22 +38,20 @@ delta L = (0,-1)
 delta R = (0,1)
 
 move :: Dir -> P -> P
-move d = (|+| delta d)
+move d = (+ delta d)
 
 follow :: P -> P -> P
 follow h t = 
-  let (dr,dc) = h |-| t in
+  let (dr,dc) = h - t in
   if abs dr `max` abs dc <= 1 then 
     t
   else 
-    t |+| (signum dr, signum dc)
+    t + signum (dr,dc)
 
 step :: Rope -> Dir -> Rope
-step (h:t) d = do 
-  scanl1 follow (move d h : t)
+step rope d = scanl1 follow (tweak (move d) rope)
 
-state0 n = replicate n z
-  where z = (0,0)
+state0 n = replicate n (0,0)
 
 simulate :: Int -> [Dir] -> [Rope]
 simulate n = scanl step (state0 n)

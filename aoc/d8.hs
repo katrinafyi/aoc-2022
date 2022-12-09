@@ -16,15 +16,10 @@ import Data.Foldable
 import Text.ParserCombinators.ReadP
 import qualified Text.ParserCombinators.ReadP as P
 
-grid :: [[a]] -> [[((Int,Int),a)]]
-grid arg = do
-  (r,row) <- zip [0..] arg
-  pure [((r,c),x) | (c,x) <- zip [0..] row]
-
 type In = [[((Int, Int), Int)]]
 
 parse :: String -> In
-parse = grid . fmap (fmap (read . pure)) . lines
+parse = indexed2 . fmap (fmap (read . pure)) . lines
 
 -- visible :: Ord a => [(a,Int)] -> Set a
 visible = go (-1)
