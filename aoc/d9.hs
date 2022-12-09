@@ -37,7 +37,7 @@ parse = concatMap p . lines
 
 -- ROW COLUMN
 type P = (Int,Int)
-data S = S { rope :: [P], seen :: Set P} deriving Show
+type Rope = [P]
 
 (x,y) |+| (a,b) = (x+a,y+b)
 (x,y) |-| (a,b) = (x-a,y-b)
@@ -63,20 +63,19 @@ follow h t =
   else 
     t |+| (clamp dr, clamp dc)
 
-step :: Dir -> State S ()
+step :: Dir -> State Rope P
 step d = do 
-  (S r seen) <- get
-  let (h:t) = r
-  let rope = move d h : t
-  let rope' = scanl1 follow rope
-  let seen' = Set.insert (last rope') seen
-  modify $ \s -> s { seen = seen', rope = rope' }
+  modify $ \(h:t) -> move d h : t
+  modify $ scanl1 follow 
+  last <$> get
 
-state0 n = S (replicate n z) (Set.singleton z)
+
+state0 n = replicate n z
   where z = (0,0)
 
-one ds = length $ seen $ execState (traverse step ds) (state0 2)
-two ds = length $ seen $ execState (traverse step ds) (state0 10)
+simulate n ds = evalState (traverse step ds) (state0 n)
+one ds = length $ Set.fromList $ simulate 2 ds
+two ds = length $ Set.fromList $ simulate 10 ds
 
 main :: IO ()
 main = do
