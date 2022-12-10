@@ -35,7 +35,7 @@ tweak :: (a -> a) -> [a] -> [a]
 tweak _ [] = [] 
 tweak f (x:xs) = f x : xs
 
-indexed :: [a] -> [(Int,a)]
+indexed :: (Num n, Enum n) => [a] -> [(n,a)]
 indexed = zip [0..]
 
 indexed2 :: [[a]] -> [[((Int,Int),a)]]
