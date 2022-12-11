@@ -4,6 +4,7 @@ import Data.Char
 import Data.List
 import Data.Functor
 import Data.Function
+import Control.Monad
 import Control.Applicative
 import Text.ParserCombinators.ReadP
 
@@ -96,6 +97,9 @@ line' = line <* char '\n'
 
 eitherA :: Alternative f => f a -> f b -> f (Either a b)
 eitherA a b = (Left <$> a) <|> (Right <$> b)
+
+iterateM :: Monad m => Int -> (a -> m a) -> a -> m a
+iterateM n f x = foldM (&) x (replicate n f)
 
 readp :: Show a => ReadP a -> String -> a 
 readp p s = case readP_to_S (p <* eof) s of 

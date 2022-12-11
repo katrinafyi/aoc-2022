@@ -13,7 +13,9 @@ import Data.List
 import Data.Maybe
 import Data.Either
 import Data.Functor
+import Data.Function
 import Data.Foldable
+
 
 import Control.Arrow
 import Control.Monad.State.Strict
@@ -80,15 +82,12 @@ step monkeys post stacks = foldM go stacks monkeys
         s' = second (:[]) . check mon <$> (stk ! m)
         stk' = Map.fromListWith (flip (++)) s'
 
-nest :: Monad m => Int -> (a -> m a) -> a -> m a
-nest n f x = foldM (const . f) x (replicate n ())
-
 go :: Int -> (Integer -> Integer) -> ([M],S) -> Integer
 go n post (monkeys,state) = x*y
   where 
     ms = fmap m monkeys
     s0 = Map.fromList $ (id &&& const 0) <$> ms
-    counts = execState (nest n (step monkeys post) state) s0
+    counts = execState (iterateM n (step monkeys post) state) s0
     [x,y] = take 2 $ reverse $ sort $ Map.elems counts
 
 one = go 20 (`div` 3)
@@ -96,7 +95,6 @@ one = go 20 (`div` 3)
 two x@(monkeys,state) = go 10000 (`mod` d') x
   where 
     d' = product $ fmap d monkeys
-
 
 main :: IO ()
 main = do
