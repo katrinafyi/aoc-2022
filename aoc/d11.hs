@@ -22,17 +22,18 @@ import Text.ParserCombinators.ReadP ()
 import qualified Text.ParserCombinators.ReadP as P
 
 
-type S = Map Int [Int]
+type S = Map Int [Integer]
+type C = Map Int Integer
 
 process :: [String] -> [String]
 process = fmap (filter (not . (`elem` ",:")))
 
-data M = M { m :: Int, op :: (Int -> Int), d :: Int, tf :: (Int,Int) }
+data M = M { m :: Int, op :: (Integer -> Integer), d :: Integer, tf :: (Int,Int) }
 
 instance Show M where 
   show (M m _ d tf) = "M " ++ show m
 
-parseOp :: [String] -> Int -> Int
+parseOp :: [String] -> Integer -> Integer
 parseOp ["old", o, n] =
   case n of 
     "old" -> \x -> op o x x
@@ -41,7 +42,7 @@ parseOp ["old", o, n] =
     op "+" = (+)
     op "*" = (*)
 
-parseMonkey :: [String] -> ([Int], M)
+parseMonkey :: [String] -> ([Integer], M)
 parseMonkey (process -> 
   [
     ints -> [m],
@@ -50,7 +51,9 @@ parseMonkey (process ->
     ints -> [d],
     ints -> [t],
     ints -> [f]
-  ]) = (stack, M m (parseOp op) d (t,f))
+  ]) = 
+    (fmap fromIntegral stack, 
+     M m (parseOp op) (fromIntegral d) (t,f))
 
 parse inp = (monkeys,state)
   where
@@ -60,34 +63,44 @@ parse inp = (monkeys,state)
     mon = (monkeys !!)
 
 
-step :: [M] -> (Int -> Int) -> S -> S
-step monkeys post stacks = foldl' go stacks monkeys
+step :: [M] -> (Integer -> Integer) -> S -> State C S
+step monkeys post stacks = foldM go stacks monkeys
   where 
-    check :: M -> Int -> (Int,Int)
+    check :: M -> Integer -> (Int,Integer)
     check (M m op d (t,f)) (post . op -> x) =
       (if x `mod` d == 0 then t else f, x)
 
-    go :: S -> M -> S
+    go :: S -> M -> State C S
     go stk mon =
-      Map.insert m [] $ Map.unionWith (++) stk stk'
+      do 
+        modify $ Map.adjust (+ genericLength s') m
+        pure $ Map.insert m [] $ Map.unionWith (++) stk stk'
       where 
         (M m _ _ _) = mon
         s' = second (:[]) . check mon <$> (stk ! m)
         stk' = Map.fromListWith (flip (++)) s'
 
-one (monkeys,state) = counts
+nest :: Monad m => Int -> (a -> m a) -> a -> m a
+nest n f x = foldM (const . f) x (replicate n ())
+
+go :: Int -> (Integer -> Integer) -> ([M],S) -> Integer
+go n post (monkeys,state) = x*y
   where 
-    s = iterate (step monkeys (`div` 3)) state
-    counts = Map.unionsWith (+) $ 
-      Map.map length <$> take 21 s
+    ms = fmap m monkeys
+    s0 = Map.fromList $ (id &&& const 0) <$> ms
+    counts = execState (nest n (step monkeys post) state) s0
     [x,y] = take 2 $ reverse $ sort $ Map.elems counts
 
+one = go 20 (`div` 3)
 
-two = id
+two x@(monkeys,state) = go 10000 (`mod` d') x
+  where 
+    d' = product $ fmap d monkeys
+
 
 main :: IO ()
 main = do
   inp <- parse <$> getContents
   print $ inp
   print $ one inp
-  -- traverse_ print $ two inp
+  print $ two inp
