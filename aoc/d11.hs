@@ -44,7 +44,7 @@ parseOp ["old", o, n] =
     op "+" = (+)
     op "*" = (*)
 
-parseMonkey :: [String] -> ([Integer], M)
+parseMonkey :: [String] -> (Int, [Integer], M)
 parseMonkey (process -> 
   [
     ints -> [m],
@@ -54,45 +54,50 @@ parseMonkey (process ->
     ints -> [t],
     ints -> [f]
   ]) = 
-    (fmap fromIntegral stack, 
+    (m, fmap fromIntegral stack, 
      M m (parseOp op) (fromIntegral d) (t,f))
 
 parse inp = (monkeys,state)
   where
-    (stacks,monkeys) = unzip . fmap parseMonkey . paragraphs . lines $ inp
-    ms = fmap m monkeys
+    (ms,stacks,monkeys) = unzip3 . fmap parseMonkey . paragraphs . lines $ inp
     state = Map.fromList $ zip ms stacks
-    mon = (monkeys !!)
 
-
-step :: [M] -> (Integer -> Integer) -> S -> State C S
-step monkeys post stacks = foldM go stacks monkeys
+step :: (Integer -> Integer) -> S -> M -> S
+step post stk mon =
+  Map.insert m [] $ Map.unionWith (++) stk stk'
   where 
+    (M m _ _ _) = mon
+
     check :: M -> Integer -> (Int,Integer)
     check (M m op d (t,f)) (post . op -> x) =
       (if x `mod` d == 0 then t else f, x)
 
-    go :: S -> M -> State C S
-    go stk mon =
-      do 
-        modify $ Map.adjust (+ genericLength s') m
-        pure $ Map.insert m [] $ Map.unionWith (++) stk stk'
-      where 
-        (M m _ _ _) = mon
-        s' = second (:[]) . check mon <$> (stk ! m)
-        stk' = Map.fromListWith (flip (++)) s'
+    s' = second (:[]) . check mon <$> (stk ! m)
+    stk' = Map.fromListWith (flip (++)) s'
 
-go :: Int -> (Integer -> Integer) -> ([M],S) -> Integer
-go n post (monkeys,state) = x*y
+solve n post (monkeys,s0) = x*y
   where 
-    ms = fmap m monkeys
-    s0 = Map.fromList $ (id &&& const 0) <$> ms
-    counts = execState (iterateM n (step monkeys post) state) s0
-    [x,y] = take 2 $ reverse $ sort $ Map.elems counts
+    repMonkeys = init $ concat $ replicate n monkeys
 
-one = go 20 (`div` 3)
+    states = scanl (step post) s0 repMonkeys
 
-two x@(monkeys,state) = go 10000 (`mod` d') x
+    num = length monkeys
+    get mon state = state ! m mon
+
+    -- stack processed by each monkey at each step
+    stacks = 
+      zipWith ($) (cycle (fmap get monkeys)) states
+    
+    -- number of items for each monkey at each step,
+    -- monkey-major order.
+    byMonkey = transpose $ chunks num $ fmap length stacks
+
+    counts = fmap sum byMonkey
+    x:y:_ = reverse $ sort counts
+
+one = solve 20 (`div` 3)
+
+two x@(monkeys,state) = solve 10000 (`mod` d') x
   where 
     d' = product $ fmap d monkeys
 
@@ -100,5 +105,6 @@ main :: IO ()
 main = do
   inp <- parse <$> getContents
   print $ inp
+  -- traverse print $ one inp
   print $ one inp
   print $ two inp
