@@ -17,6 +17,23 @@ sliding :: Int -> [a] -> [[a]]
 sliding _ [] = []
 sliding n (x:xs) = take n (x:xs) : sliding n xs
 
+groupIf :: (a -> Bool) -> [a] -> [[a]]
+groupIf f = go . dropWhile nf
+  where 
+    nf = not . f
+    go [] = []
+    go xs = yes : go (dropWhile nf no)
+      where (yes,no) = span f xs
+
+lstrip :: String -> String 
+lstrip = dropWhile isSpace
+
+isEmpty :: String -> Bool 
+isEmpty = null . lstrip
+
+paragraphs :: [String] -> [[String]]
+paragraphs = groupIf (not . isEmpty)
+
 splitBy :: (a -> Bool) -> [a] -> [[a]]
 splitBy p s = 
   case dropWhile p s of
