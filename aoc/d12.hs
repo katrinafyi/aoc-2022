@@ -93,11 +93,11 @@ step map = do
 
     let nexts = next map pos
     forM_ nexts (\p -> relax p (d+1))
+    step map
 
 one (inp,s,e) = Map.lookup e $ dists state
   where 
-    -- adjust number of steps upwards until success
-    state = execState (replicateM_ 100000 (step inp)) s0
+    state = execState (step inp) s0
     s0 = S (Seq.singleton s) (Map.singleton s 0)
 
 two (inp,s,e) = sort $ mapMaybe (\s -> one (inp,s,e)) starts
