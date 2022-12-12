@@ -1,4 +1,5 @@
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE TupleSections #-}
 
 import AocLib
 
@@ -13,6 +14,7 @@ import Data.Sequence(Seq ((:<|)), (|>))
 import Data.Char
 import Data.List
 import Data.Maybe
+import Data.Tuple
 import Data.Either
 import Data.Functor
 import Data.Function
@@ -25,6 +27,8 @@ import Control.Monad.State.Strict
 import Text.ParserCombinators.ReadP ()
 import qualified Text.ParserCombinators.ReadP as P
 
+import qualified Data.Graph.Inductive as G
+
 
 data S = 
   S { queue :: Seq (Int,Int),
@@ -32,16 +36,35 @@ data S =
     }
   deriving (Eq, Show)
 
-data M = M { m :: Int, op :: (Integer -> Integer), d :: Integer, tf :: (Int,Int) }
-
+type P = (Int,Int)
+data In = In (G.Gr P Int) (G.NodeMap P) P P [P]
 
 indices :: Int -> [(Int,Int)]
 indices w = go 0 
   where 
     go n = [(n,i) | i <- [0..w-1]] ++ go (n+1)
 
-parse inp = (map,start,end)
+next :: Map (Int,Int) Int -> (Int,Int) -> [(Int,Int)]
+next m pos = 
+  filter allow $ fmap (pos+) deltas
   where 
+    h = m ! pos 
+    h' p = Map.findWithDefault infinity p m
+    deltas = [(0,1),(0,-1),(1,0),(-1,0)]
+
+    allow p = h' p <= h + 1 -- && h' p /= ord 'a'
+
+make :: Map (Int,Int) Int -> (G.NodeMap P,G.Gr P Int)
+make map = snd $ G.run G.empty $ do
+  let nodes = Map.keys map
+  let edges x = (x,,1) <$> next map x
+  G.insMapNodesM nodes
+  G.insMapEdgesM $ concatMap edges nodes
+
+parse inp = In g m start end starts
+  where 
+    (m,g) = make map 
+
     w = length $ takeWhile (not . isSpace) inp
     indexed = zip (indices w) $ filter (not . isSpace) inp
 
@@ -56,15 +79,7 @@ parse inp = (map,start,end)
     heights = fmap (second h) indexed
     map = Map.fromList $ second ord <$> heights
 
-next :: Map (Int,Int) Int -> (Int,Int) -> [(Int,Int)]
-next m pos = 
-  filter allow $ fmap (pos+) deltas
-  where 
-    h = m ! pos 
-    h' p = Map.findWithDefault infinity p m
-    deltas = [(0,1),(0,-1),(1,0),(-1,0)]
-
-    allow p = h' p <= h + 1 -- && h' p /= ord 'a'
+    starts = Map.keys $ Map.filter (== ord 'a') map
 
 enqueue :: (Int,Int) -> State S () 
 enqueue p = modify $ \s -> s { queue = queue s |> p}
@@ -95,14 +110,13 @@ step map = do
     forM_ nexts (\p -> relax p (d+1))
     step map
 
-one (inp,s,e) = Map.lookup e $ dists state
+one (In g m s e _) = G.spLength (node s) (node e) g
   where 
-    state = execState (step inp) s0
-    s0 = S (Seq.singleton s) (Map.singleton s 0)
+    node x = fst $ G.mkNode_ m x
 
-two (inp,s,e) = sort $ mapMaybe (\s -> one (inp,s,e)) starts
+two (In g m _ e starts) = sort $ mapMaybe go starts
   where 
-    starts = Map.keys $ Map.filter (== ord 'a') inp
+    go s = one (In g m s e starts) 
 
 main :: IO ()
 main = do
