@@ -37,7 +37,7 @@ data S =
   deriving (Eq, Show)
 
 type P = (Int,Int)
-data In = In (G.Gr P Int) (G.NodeMap P) P P [P]
+data In = In (G.Gr P Int) (P -> G.Node) P P [P]
 
 indices :: Int -> [(Int,Int)]
 indices w = go 0 
@@ -61,9 +61,10 @@ make map = snd $ G.run G.empty $ do
   G.insMapNodesM nodes
   G.insMapEdgesM $ concatMap edges nodes
 
-parse inp = In g m start end starts
+parse inp = In g node start end starts
   where 
     (m,g) = make map 
+    node = fst . G.mkNode_ m
 
     w = length $ takeWhile (not . isSpace) inp
     indexed = zip (indices w) $ filter (not . isSpace) inp
@@ -110,13 +111,13 @@ step map = do
     forM_ nexts (\p -> relax p (d+1))
     step map
 
-one (In g m s e _) = G.spLength (node s) (node e) g
-  where 
-    node x = fst $ G.mkNode_ m x
+one (In g node s e _) = 
+  lookup (node e) $ G.level (node s) g
 
-two (In g m _ e starts) = sort $ mapMaybe go starts
+two (In g node _ e starts) = 
+  lookup (node e) $ G.leveln starts' g
   where 
-    go s = one (In g m s e starts) 
+    starts' = (,0) . node <$> starts
 
 main :: IO ()
 main = do
