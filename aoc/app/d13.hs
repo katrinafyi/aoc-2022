@@ -24,7 +24,7 @@ import Data.Foldable
 
 import Control.Arrow
 import Control.Applicative
-import Control.Monad.State.Strict
+import Control.Monad.Trans.State.Strict
 
 import Text.ParserCombinators.ReadP
 import qualified Text.ParserCombinators.ReadP as P

@@ -20,12 +20,11 @@ import Data.Either
 import Data.Functor
 import Data.Function
 import Data.Foldable
-import Data.CallStack (HasCallStack)
 
 
 import Control.Arrow
 import Control.Applicative
-import Control.Monad.State.Strict
+import Control.Monad.Trans.State.Strict
 
 import Text.ParserCombinators.ReadP
 import qualified Text.ParserCombinators.ReadP as P
@@ -66,7 +65,7 @@ step bot pos@(x,y) walls
 
 start = (500,0)
 
-one :: HasCallStack => Set (Int, Int) -> Int
+one :: Set (Int, Int) -> Int
 one walls = numWalls - walls0
   where
     walls0 = length walls
@@ -75,7 +74,7 @@ one walls = numWalls - walls0
     final = iterateM 100000 (step bottom start) walls
     numWalls = either length (error "incomplete simulation") final
 
-two :: HasCallStack => Set (Int, Int) -> Int
+two :: Set (Int, Int) -> Int
 two walls = one (Set.union floor walls)
   where 
     bottom = maximum $ Set.map snd walls
