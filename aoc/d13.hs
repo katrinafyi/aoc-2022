@@ -50,6 +50,10 @@ parse = readp $ do
   let p = take2 <$> P.count 2 (parsePacket <* skipSpaces)
   P.many p
 
+
+test :: [(P,P)] -> [(Integer, Bool)]
+test = fmap (second $ uncurry (<=)) . zip [1..]
+
 one = sum . fmap fst . filter (uncurry (<=) . snd) . zip [1..]
 
 flat = concatMap (\(x,y) -> [x,y])
@@ -68,3 +72,4 @@ main = do
   -- print $ inp
   print $ one inp
   print $ two inp
+  print $ test inp
