@@ -16,7 +16,10 @@ chunks n xs =
 
 sliding :: Int -> [a] -> [[a]]
 sliding _ [] = []
-sliding n (x:xs) = take n (x:xs) : sliding n xs
+sliding n (x:xs) 
+  | length front == n = front : sliding n xs
+  | otherwise = []
+  where front = take n (x:xs)
 
 groupIf :: (a -> Bool) -> [a] -> [[a]]
 groupIf f = go . dropWhile nf
@@ -89,6 +92,9 @@ ints :: String -> [Int]
 ints = fmap read . filter (digit . head) . groupBy ((==) `on` digit)
   where 
     digit x = isDigit x || x `elem` "+-"
+
+uints :: String -> [Int]
+uints = fmap read . filter (isDigit . head) . groupBy ((==) `on` isDigit)
 
 line :: ReadP String 
 line = munch (/= '\n')
