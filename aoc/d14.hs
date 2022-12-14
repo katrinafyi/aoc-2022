@@ -20,6 +20,7 @@ import Data.Either
 import Data.Functor
 import Data.Function
 import Data.Foldable
+import Data.CallStack (HasCallStack)
 
 
 import Control.Arrow
@@ -58,28 +59,32 @@ step bot pos@(x,y) walls
   | clear dr = step bot dr walls 
   | otherwise = Right $ Set.insert pos walls
   where
-    clear = not . (`Set.member` walls)
+    clear = (`Set.notMember` walls)
     d = pos + (0,1)
     dl = pos + (-1,1)
     dr = pos + (1,1)
 
 start = (500,0)
 
-one walls = either length undefined final - length walls0
+one :: HasCallStack => Set (Int, Int) -> Int
+one walls = numWalls - walls0
   where
+    walls0 = length walls
     bottom = maximum $ Set.map snd walls
-    final = iterateM 100000 (step bottom start) walls
-    walls0 = walls
 
+    final = iterateM 100000 (step bottom start) walls
+    numWalls = either length (error "incomplete simulation") final
+
+two :: HasCallStack => Set (Int, Int) -> Int
 two walls = one (Set.union floor walls)
   where 
     bottom = maximum $ Set.map snd walls
     width = bottom
-    floor = Set.fromList $ (,bottom+2) <$> [500-width-10..500+width+10]
+    floor = Set.fromList $ 
+      (,bottom+2) <$> [500-width-10..500+width+10]
 
 main :: IO ()
 main = do
   inp <- parse <$> getContents
-  -- print $ inp
   print $ one inp
   print $ two inp
