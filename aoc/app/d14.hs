@@ -71,7 +71,7 @@ one walls = numWalls - walls0
     walls0 = length walls
     bottom = maximum $ Set.map snd walls
 
-    final = iterateM 100000 (step bottom start) walls
+    final = fixM (step bottom start) walls
     numWalls = either length (error "incomplete simulation") final
 
 two :: Set (Int, Int) -> Int

@@ -72,6 +72,9 @@ instance (Num a, Num b) => Num (a,b) where
   signum (x,y) = (signum x, signum y)
   fromInteger x = (fromInteger x,fromInteger x)
 
+manhattan :: Num a => (a,a) -> a
+manhattan (x,y) = abs x + abs y
+
 uinteger :: ReadP Integer 
 uinteger = read <$> munch1 isDigit
 
@@ -106,6 +109,9 @@ eitherA a b = (Left <$> a) <|> (Right <$> b)
 
 iterateM :: Monad m => Int -> (a -> m a) -> a -> m a
 iterateM n f x = foldM (&) x (replicate n f)
+
+fixM :: Monad m => (a -> m a) -> a -> m a 
+fixM f = fix (f >=>)
 
 readp :: Show a => ReadP a -> String -> a 
 readp p s = case readP_to_S (p <* eof) s of 
