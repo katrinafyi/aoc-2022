@@ -43,27 +43,63 @@ diamond d pos = do
   dy <- [-d'..d']
   pure $ pos + (dx,dy)
 
+border :: Int -> P -> [P]
+border d pos = do
+  dx <- [-d..d]
+  let d' = abs (abs dx - d)
+  dy <- nub [-d',d']
+  pure $ pos + (dx,dy)
+
 mark (sensor,beacon) = Set.fromList $ diamond d sensor
   where 
     d = manhattan (beacon - sensor)
 
 markAll inp = Set.unions $ mark <$> inp
 
-one inp = 
-  length $ Set.filter ((== y) . snd) $
-    marked Set.\\ beacons
+within :: Int -> P -> P -> Bool
+within d x y = manhattan (x - y) <= d
+
+one inp = length $ blocked Set.\\ beacons
   where 
+    sensors = Set.fromList $ fst <$> inp
+    radii = (\(s,b) -> (s,manhattan (s-b))) <$> inp
     beacons = Set.fromList $ snd <$> inp
-    marked = markAll inp
 
-    maxY = maximum $ snd . snd <$> inp
-    y = if maxY > 100 then 2000000 else 10
+    maxD = maximum $ manhattan . uncurry (-) <$> inp
+
+    minX = minimum $ fst . fst <$> inp
+    maxX = maximum $ fst . fst <$> inp
+
+    y = if maxX > 1000 then 2000000 else 10
+
+    row = (,y) <$> [minX-maxD..maxX+maxD]
+
+    clear p = not $ any (\(s,r) -> within r s p) radii
+    blocked = Set.fromList $ filter (not . clear) row
 
 
-two = id
+two inp = answer . nub $ filter clear search
+  where 
+    sensors = Set.fromList $ fst <$> inp
+    radii = (\(s,b) -> (s,manhattan (s-b))) <$> inp
+
+    minX = minimum $ fst . fst <$> inp
+    maxX = maximum $ fst . fst <$> inp
+
+    size = if maxX > 1000 then 4000000 else 20
+    inbounds (x,y) = 
+      0 <= min x y && max x y <= size
+    search = filter inbounds $ 
+      concatMap (\(s,r) -> border (r+1) s) radii
+
+    clear p = not $ any (\(s,r) -> within r s p) radii
+    -- blocked = Set.fromList $ filter (not . clear) row
+
+    answer [(x,y)] = 
+      fromIntegral x * 4000000 + fromIntegral y :: Integer
 
 main :: IO ()
 main = do
   inp <- parse <$> getContents
-  print $ one inp
+  -- print $ one inp
   print $ two inp
