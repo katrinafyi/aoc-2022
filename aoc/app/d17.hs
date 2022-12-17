@@ -126,11 +126,13 @@ main = do
 
   -- offset <- (read <$> head <$> getArgs) :: IO Int
 
-  let sample = go inp 4000 rockfloor
+  let numsamples = 4000
+  let sample = go inp numsamples rockfloor
   let diff [a,b] = b-a 
   let ae = sortOn length . fmap (fmap fst) . groupBy ((==) `on` snd) . sortOn snd $ zip [0..] $ fmap topmost $ sample
-  -- print ae
   let deltas = fmap (fmap diff . sliding 2) ae
+  -- print ae
+  -- print deltas
   let c = mode $ fmap mode $ filter (not . null) deltas
   print $ "cycle length inferred: " ++ show c
 
@@ -141,7 +143,8 @@ main = do
         filter (\((a,b),(c,d)) -> a < c) $
         take2 <$> sliding 2 cyclesplit
   -- print candidates
-  let offset = fst $ last candidates
+  -- let offset = fst $ last candidates
+  let offset = numsamples - c
   print $ "offset inferred: " ++ show offset
   -- die "die offset finder"
   -- let offset = 220
@@ -157,6 +160,7 @@ main = do
   print $ "rest height: " ++ show (mark1 - mark0)
   print $ "cycles: " ++ show cycles
   print $ "mark0 height " ++ show mark0
+  print $ "p1 " ++ show (1 + height (sample !! 2022))
   print $ "p2 " ++ show (1 + fromIntegral mark1 + cycles * fromIntegral (mark - mark0))
 
   print $ showgrid $ topmost $ last $ go inp offset rockfloor
