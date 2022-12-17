@@ -121,38 +121,39 @@ main = do
   -- print inp
 
   let windlen = length raw * 2
-  let shapelen = 4
+  let shapelen = 5
   let l = lcm windlen shapelen
 
   -- offset <- (read <$> head <$> getArgs) :: IO Int
-  print $ "multiple: " ++ show l
 
   let sample = go inp 4000 rockfloor
   let diff [a,b] = b-a 
   let ae = sortOn length . fmap (fmap fst) . groupBy ((==) `on` snd) . sortOn snd $ zip [0..] $ fmap topmost $ sample
   -- print ae
-  -- print $ fmap (fmap diff . sliding 2) ae
-  let c = 1745
-  -- die "a"
+  let deltas = fmap (fmap diff . sliding 2) ae
+  let c = mode $ fmap mode $ filter (not . null) deltas
+  print $ "cycle length inferred: " ++ show c
 
-  let m = ((`mod` l) *** (`mod` l))
-  ignore $ sort $ id $ fmap (fst *** fst) $ filter (\((a,b),(c,d)) -> match b d) $ 
-    take2 <$> sliding 2 (concat (transpose (chunks c
-      (zip [0..] sample))))
-
+  let cyclesplit = concat (transpose (chunks c (zip [0..] sample)))
+  let candidates = sort $ 
+        fmap (fst *** fst) $ 
+        filter (\((a,b),(c,d)) -> match b d) $ 
+        filter (\((a,b),(c,d)) -> a < c) $
+        take2 <$> sliding 2 cyclesplit
+  -- print candidates
+  let offset = fst $ last candidates
+  print $ "offset inferred: " ++ show offset
   -- die "die offset finder"
+  -- let offset = 220
 
-
-  let offset = 220
-
-  let mark0 = height $ last $ go inp offset rockfloor
-  let mark = height $ last $ go inp (c+offset) rockfloor
+  let mark0 = height $ sample !! offset
+  let mark = height $ sample !! (c+offset)
   print $ "height per cycle: " ++ show (mark - mark0)
 
   let big = 1000000000000 :: Integer
   let (cycles,rest) = (big - fromIntegral offset) `divMod` fromIntegral c
 
-  let mark1 = height $ last $ go inp (offset + fromIntegral rest) rockfloor
+  let mark1 = height $ sample `genericIndex` (offset + fromIntegral rest)
   print $ "rest height: " ++ show (mark1 - mark0)
   print $ "cycles: " ++ show cycles
   print $ "mark0 height " ++ show mark0

@@ -5,6 +5,7 @@ import Data.List
 import Data.Functor
 import Data.Function
 import Control.Monad
+import Control.Arrow
 import Control.Applicative
 import Text.ParserCombinators.ReadP
 import qualified Data.Graph.Inductive as G
@@ -113,6 +114,10 @@ iterateM n f x = foldM (&) x (replicate n f)
 
 fixM :: Monad m => (a -> m a) -> a -> m a 
 fixM f = fix (f >=>)
+
+
+mode :: [Int] -> Int
+mode = snd . maximum . map (length &&& head) . group . sort
 
 readp :: Show a => ReadP a -> String -> a 
 readp p s = case readP_to_S (p <* eof) s of 
