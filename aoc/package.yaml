@@ -24,6 +24,7 @@ dependencies:
 - containers
 - transformers
 - fgl
+- MemoTrie
 
 ghc-options:
 # - -Wall
@@ -97,6 +98,12 @@ executables:
   d15:
     <<: *day
     main: d15.hs
+  d16:
+    <<: *day
+    main: d16.hs
+  d17:
+    <<: *day
+    main: d17.hs
 
 
 tests:

@@ -33,7 +33,8 @@ library
       src
   ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
+      MemoTrie
+    , base >=4.7 && <5
     , containers
     , fgl
     , transformers
@@ -45,7 +46,8 @@ executable aoc-exe
       app
   ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aoc
+      MemoTrie
+    , aoc
     , base >=4.7 && <5
     , containers
     , fgl
@@ -58,7 +60,8 @@ executable d10
       app
   ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      aoc
+      MemoTrie
+    , aoc
     , base >=4.7 && <5
     , containers
     , fgl
@@ -71,7 +74,8 @@ executable d11
       app
   ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      aoc
+      MemoTrie
+    , aoc
     , base >=4.7 && <5
     , containers
     , fgl
@@ -84,7 +88,8 @@ executable d12
       app
   ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      aoc
+      MemoTrie
+    , aoc
     , base >=4.7 && <5
     , containers
     , fgl
@@ -97,7 +102,8 @@ executable d13
       app
   ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      aoc
+      MemoTrie
+    , aoc
     , base >=4.7 && <5
     , containers
     , fgl
@@ -110,7 +116,8 @@ executable d14
       app
   ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      aoc
+      MemoTrie
+    , aoc
     , base >=4.7 && <5
     , containers
     , fgl
@@ -123,7 +130,36 @@ executable d15
       app
   ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      aoc
+      MemoTrie
+    , aoc
+    , base >=4.7 && <5
+    , containers
+    , fgl
+    , transformers
+  default-language: Haskell2010
+
+executable d16
+  main-is: d16.hs
+  hs-source-dirs:
+      app
+  ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      MemoTrie
+    , aoc
+    , base >=4.7 && <5
+    , containers
+    , fgl
+    , transformers
+  default-language: Haskell2010
+
+executable d17
+  main-is: d17.hs
+  hs-source-dirs:
+      app
+  ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      MemoTrie
+    , aoc
     , base >=4.7 && <5
     , containers
     , fgl
@@ -136,7 +172,8 @@ executable d3
       app
   ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      aoc
+      MemoTrie
+    , aoc
     , base >=4.7 && <5
     , containers
     , fgl
@@ -149,7 +186,8 @@ executable d4
       app
   ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      aoc
+      MemoTrie
+    , aoc
     , base >=4.7 && <5
     , containers
     , fgl
@@ -162,7 +200,8 @@ executable d5
       app
   ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      aoc
+      MemoTrie
+    , aoc
     , base >=4.7 && <5
     , containers
     , fgl
@@ -175,7 +214,8 @@ executable d6
       app
   ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      aoc
+      MemoTrie
+    , aoc
     , base >=4.7 && <5
     , containers
     , fgl
@@ -188,7 +228,8 @@ executable d7
       app
   ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      aoc
+      MemoTrie
+    , aoc
     , base >=4.7 && <5
     , containers
     , fgl
@@ -201,7 +242,8 @@ executable d8
       app
   ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      aoc
+      MemoTrie
+    , aoc
     , base >=4.7 && <5
     , containers
     , fgl
@@ -214,7 +256,8 @@ executable d9
       app
   ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      aoc
+      MemoTrie
+    , aoc
     , base >=4.7 && <5
     , containers
     , fgl
@@ -230,7 +273,8 @@ test-suite aoc-test
       test
   ghc-options: -O3 -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aoc
+      MemoTrie
+    , aoc
     , base >=4.7 && <5
     , containers
     , fgl

@@ -7,6 +7,7 @@ import Data.Function
 import Control.Monad
 import Control.Applicative
 import Text.ParserCombinators.ReadP
+import qualified Data.Graph.Inductive as G
 
 chunks :: Int -> [a] -> [[a]]
 chunks _ [] = []
@@ -118,3 +119,10 @@ readp p s = case readP_to_S (p <* eof) s of
   [(x,[])] -> x
   [] -> error "readp error: no successful parse"
   x -> error $ "readp error: ambiguous parse " ++ show x
+
+runGraph :: (G.DynGraph g, Ord a) => 
+  G.NodeMapM a b g r -> (g a b, a -> G.Node)
+runGraph maker = (g, node)
+  where 
+    (_,(map,g)) = G.run G.empty maker
+    node = fst . G.mkNode_ map
