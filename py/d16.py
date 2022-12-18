@@ -114,6 +114,7 @@ def one():
         if t+dt < TIME:
           yield ((t+dt,i2,original), cost * dt )
 
+  @lru_cache(maxsize=None)
   def go(startnode, elephant=False): # returns PROFIT
 
     TOTAL = allflow * TIME
@@ -152,9 +153,10 @@ def one():
     return TOTAL - cost[endnode]
     # print(allflow * TIME - cost[endnode])
 
-  elephants = [go((0,0,x)) for x in supsets[1]]
+  print(go(startnode))
+  print() 
+  print(go(startnode,True))
 
-  print(elephants[1])
 
   # DP MATRIX
   #
