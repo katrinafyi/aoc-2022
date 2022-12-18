@@ -54,6 +54,7 @@ parsel l = V k f n
 parse = fmap (parsel . words) . lines
 
 valves = unsafePerformIO $ parse <$> getContents
+
 valvemap = Map.fromList $ (key &&& id) <$> valves
 
 pregraph :: [V] -> (G.Gr String Int, String -> G.Node)
@@ -85,6 +86,8 @@ allflow = setflow nzvset
 
 type N = (Int,String,Set String)
 
+
+
 duration = 30
 
 succs :: HasCallStack => N -> [(N,N,Int)]
@@ -94,7 +97,7 @@ succs n@(t1,v1,open) = this ++ terminal ++ mapMaybe make (Set.toList closed)
     end = duration
     closed = nzset Set.\\ open
 
-    cost = allflow - setflow (Set.map (nz !) open)
+    cost = allflow - setflow' n
 
     make v
       | v == v1 = Nothing
@@ -102,7 +105,7 @@ succs n@(t1,v1,open) = this ++ terminal ++ mapMaybe make (Set.toList closed)
       | otherwise = Nothing
       where
         f = d * cost
-        d = 0
+        d = distance v1 v
 
     this
       | t1 < end && Set.member v1 closed = [(n,(t1+1,v1,Set.insert v1 open),cost)]
@@ -122,10 +125,11 @@ allnodes =
   where
     times = [0..30]
 
-setflow' = sum . map flow . map (nz !) . Set.toList . thd3
+setflow' = sum . map (maybe 0 flow) . map (nz Map.!?) . Set.toList . thd3
 
-relax :: N -> N -> Map N Int -> Map N Int
+relax :: HasCallStack => N -> N -> Map N Int -> Map N Int
 relax from to dists
+  | not (Map.member from dists) = dists
   | d' < old = Map.insert to d' dists
   | otherwise = dists
   where
@@ -133,7 +137,7 @@ relax from to dists
     cost = dt * (allflow - setflow' from)
     d' = d + cost
 
-    d = dists ! from
+    d = fromMaybe (error $ show from) $ dists Map.!? from
     old = fromMaybe maxBound $ dists Map.!? to
 
 
@@ -153,14 +157,23 @@ gnode :: N -> G.Node
   G.insMapNodesM $ fmap fst3 edges ++ fmap snd3 edges
   G.insMapEdgesM $ edges
 
+initdists = Map.singleton startnode 0
 
-one = id
+one :: HasCallStack => Map N Int -> [(N, N, c)] -> Map N Int
+one = foldl' go 
+  where 
+    go dists (from,to,_) = relax from to dists
 
-two = id
 
+allpairs = do 
+  v1 <- "AA" : Set.toList nzset
+  v2 <- Set.toList nzset 
+  pure $ (v1,v2,distance v1 v2)
 
 main :: HasCallStack => IO ()
 main = do
+  print allpairs 
+
   -- inp <- parse <$> getContents
   let inp = valves
   print inp
@@ -171,14 +184,16 @@ main = do
   print $ succs endnode
   print $ length allnodes
   putStrLn $ "nodes done"
-  print $ fmap (length . succs) allnodes
-  print $ length edges
+
+  let dists = one initdists (concatMap succs (startnode:allnodes))
+  print $ duration * allflow - (dists ! endnode)
   putStrLn $ "edges done"
   print $ G.order g
   print $ G.size g
   let Just path = G.spLength (gnode startnode) (gnode endnode) g
-  print $ path
-  print $ duration * allflow - path
+  print 0
+  -- print $ path
+  -- print $ duration * allflow - path
   -- print $ fmap (G.lab' . G.context g) path
   -- print $ one inp
   -- print $ two inp
