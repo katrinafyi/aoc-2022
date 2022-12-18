@@ -1,4 +1,5 @@
 from functools import lru_cache
+import heapq
 import sys
 import time 
 from .lib import *
@@ -107,7 +108,7 @@ def one():
       open >>= 1
       # assert i2 <= len(nz)
 
-      if i2 == i and not bit:
+      if i2 == i and not bit and t+1 < TIME:
         yield ((t+1,i,original | (1<<i)), cost)
       elif not bit:
         dt = nzsp[i,i2]
@@ -124,38 +125,59 @@ def one():
     t0 = time.time()
 
     pi = None
-    for ind,i in enumerate(allnodes(startnode[2])):
+    q = [(0,startnode)]
+    ind = 1
+    while q:
+      x,i = heapq.heappop(q)
+      if cost[i] < x: continue
       
-      if elephant and ind & ((1<<20) -1) == 0:
-        t = round(time.time() - t0,2)
-        eta = round(t * size / (ind+1)-t,2)
-        print(ind, ind/size, 'in', t, 'eta', eta, '... ', end='', flush=True)
-
-      if i not in cost: continue
-      if pi is not None and pi != i:
-        del cost[pi]
-      pi = i 
+      # if i not in cost: continue
+      assert i in cost
       d = cost[i]
       
       for i2,cost2 in succs(i):
         d2 = d+cost2 # LOSS
-        if i2[1] == -1 and elephant:
-          # start another pathfinder with the remaining valves
-          profit1 = TOTAL - d2 # PROFIT
-          # elephant may go and open everything not already opened
-          start = (0,0,i[2])
-          profit2 = (go(start) - TIME * subsetflow[i[2]])
-          d2 = TOTAL - (profit1 + profit2)
         if d2 < cost.get(i2, INF):
           cost[i2] = d2
+          heapq.heappush(q, (d2,i2))
     
     # print(cost)
-    return TOTAL - cost[endnode]
+    x = TOTAL - cost[endnode]
+    # cache[open] = x 
+    return x
     # print(allflow * TIME - cost[endnode])
 
-  print(go(startnode))
-  print() 
-  print(go(startnode,True))
+
+  # compute all possible profits, from all
+  # starting valve configurations
+  elephants = [None] * len(succsrange)
+  t = time.time()
+  for j,i in enumerate(supsets[1]):
+    if j % 1000 == 0: 
+      print(j/len(supsets[1]), time.time() - t)
+      t = time.time()
+
+    elephants[i] = go((0,0,i))
+
+
+  # partition valve subsets into my valves 
+  # and the elephant's valves.
+  d = 0
+  for my in supsets[1]:
+    ele = ((~my) & succsmask) | 1
+    # this is sound since `go` assumese the opened valves 
+    # are always open and ignores them
+
+    # my profit is the profit from starting with
+    # the elephant's valves opened, then cancelling out 
+    # those valves.
+    myprofit = elephants[ele] - TIME * subsetflow[ele]
+    eleprofit = elephants[my] - TIME * subsetflow[my]
+    d = max(d, myprofit + eleprofit)
+  print(d)
+
+  
+
 
 
   # DP MATRIX
