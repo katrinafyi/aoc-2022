@@ -1,4 +1,6 @@
-import sys 
+from functools import lru_cache
+import sys
+import time 
 from .lib import *
 
 from collections import defaultdict, deque
@@ -16,7 +18,7 @@ nz = list(set([x for x,y,z in apsp]))
 nz.sort()
 nzidmap = {k: nz.index(k) for k in nz}
 nzid = lambda x: nzidmap[x]
-nzrange = tuple(nzidmap.values())
+nzrange = range(len(nz)+1)
 print(nzidmap)
 
 nzsp = {(nzid(x),nzid(y)): z for x,y,z in apsp}
@@ -32,8 +34,8 @@ def one():
     l = l.replace(',', '').split()
     name = l[1]
     flow = int(l[4].split('=')[-1].strip(';'))
-    succs = tuple(l[9:])
-    valves.append((name,flow,succs))
+    tunnels = tuple(l[9:])
+    valves.append((name,flow,tunnels))
 
   nz = [(x,y,z) for x,y,z in valves if y > 0]
   z = [(x,y,z) for x,y,z in valves if y == 0]
@@ -44,6 +46,7 @@ def one():
 
   allflow = sum(flows.values())
   print(allflow)
+  print(flows)
 
 
   def calcflow(enc):
@@ -56,28 +59,45 @@ def one():
       i += 1
     return x
 
+  # efficiently enumerate all bitwise supersets of x
+  def supset(x):
+    A = (~x) & ((1<<(len(nz)+1))-1) # variable bits
+    B = x  # fixed bits
+    sm = A
+    while True:
+      yield sm | B 
+      sm = (sm - 1) & A 
+      if sm == 0: break 
+    yield x
+
   succsrange = range(2**(len(nz)+1))
   subsetflow = [calcflow(i) for i in succsrange]
+  supsets = [tuple(supset(i)) for i in succsrange]
 
   print(len(subsetflow))
+  print(len(supsets))
+
   print(allflow)
 
   # nodes are (time, current node id, bit-encoded successors via node id)
 
   TIME = 26
-  print(len(range(TIME)), len(nzrange), len(nzrange), len(succsrange))
+  print(len(range(TIME)), len(nzrange), len(nzrange), len(succsrange)/2)
+  size = len(range(TIME)) * len(nzrange) * len(supsets[1])
+  print('estimated size', size)
 
   # nodes only exist for the non-zero flow nodes
-  allnodes = ((t,i,succs) for t in range(TIME) for i in nzrange for succs in succsrange
-              if succs%2 == 1 and ((i != 0 and j != 0 and succs.bit_count() <= 2*t) if t != 0 else (i == j == 0 and succs==1)))
+  def allnodes(init=1):
+    yield (0,0,init)
+    yield from ((t,i,open) for t in range(TIME)[1:] for i in nzrange[1:] for open in supsets[init])
   endnode = (TIME,-1,-1)
   startnode = (0,0,1)
-  # print(len(allnodes))
+  # print([bin(x) for x in supsets[1][-10:]])
 
-  def succs(, arg):
+  def succs(arg):
     t,i,open = arg
-
     cost = allflow - subsetflow[open]
+
     if i >= 0: # if not end
       yield (endnode,(TIME-t) * cost)
 
@@ -85,51 +105,57 @@ def one():
 
     for i2 in range(len(nz)+1):
       open,bit = divmod(open,2)
-      # assert j <= len(nz)
+      # assert i2 <= len(nz)
 
       if i2 == i and not bit:
         yield ((t+1,i,original | (1<<i)), cost)
       elif not bit:
         dt = nzsp[i,i2]
-        yield ((t+dt,i2,original), cost * dt )
+        if t+dt < TIME:
+          yield ((t+dt,i2,original), cost * dt )
 
-  def elephant(arg):
-    t,i,j,open = arg
+  # @lru_cache(maxsize=None)
+  def go(startnode, elephant=False): # returns PROFIT
 
-    for (t2,i2,open2),_ in succs((t,i,open)):
-      t3,i3,open3 = t,j,open
-      for (t3,i3,open3),_ in succs((t3,i3,open3)):
-        ...
+    TOTAL = allflow * TIME
 
-  def orders(i=0,j=0, t=TIME, t2=TIME, closed=frozenset(nzrange) - {0}):
-    if not closed:
-      yield (), ()
-      return
-    if t
+    cost = {startnode: 0}
+    # print(list(succs(startnode)))
+    t0 = time.time()
 
-    for x in closed:
-      dt = nzsp[cur,x]
-      if dt > t: continue
-      for order in orders(x,t-dt,closed - {x}):
-        yield ((True,x),) + order
-        yield ((False,x),) + order
+    pi = None
+    for ind,i in enumerate(allnodes(startnode[2])):
+      
+      if elephant and ind & ((1<<20) -1) == 0:
+        t = round(time.time() - t0,2)
+        eta = round(t * size / (ind+1),2) - t
+        print(ind, ind/size, 'in', t, 'eta', eta, '... ', end='', flush=True)
 
-  print(len(list(orders())))
+      if i not in cost: continue
+      if pi is not None and pi != i:
+        del cost[pi]
+      pi = i 
+      d = cost[i]
+      
+      for i2,cost2 in succs(i):
+        d2 = d+cost2 # LOSS
+        if i2[1] == -1 and elephant:
+          # start another pathfinder with the remaining valves
+          profit1 = TOTAL - d2 # PROFIT
+          # elephant may go and open everything not already opened
+          start = (0,0,i[2])
+          profit2 = (go(start) - TIME * subsetflow[i[2]])
+          d2 = TOTAL - (profit1 + profit2)
+        if d2 < cost.get(i2, INF):
+          cost[i2] = d2
+    
+    # print(cost)
+    return TOTAL - cost[endnode]
+    # print(allflow * TIME - cost[endnode])
 
-  cost = {startnode: 0}
-  # print(allnodes)
-  print(list(succs(startnode)))
-
-  for ind,i in enumerate(allnodes):
-    if i not in cost: continue
-    d = cost[i]
-    del cost[i]
-    for i2,cost2 in succs(i):
-      d2 = d+cost2
-      if d2 < cost.get(i2, INF):
-        cost[i2] = d2
-  # print(cost)
-  print(allflow * TIME - cost[endnode])
+  print(go(startnode))
+  print() 
+  print(go(startnode,True))
 
 
   # DP MATRIX
