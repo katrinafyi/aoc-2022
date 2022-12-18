@@ -54,6 +54,10 @@ take2 :: [a] -> (a,a)
 take2 [x,y] = (x,y)
 take2 _ = error "required two elements"
 
+take3 :: [a] -> (a,a,a)
+take3 [x,y,z] = (x,y,z)
+take3 _ = error "required two elements"
+
 tweak :: (a -> a) -> [a] -> [a]
 tweak _ [] = [] 
 tweak f (x:xs) = f x : xs
@@ -73,6 +77,14 @@ instance (Num a, Num b) => Num (a,b) where
   abs (x,y) = (abs x, abs y)
   signum (x,y) = (signum x, signum y)
   fromInteger x = (fromInteger x,fromInteger x)
+
+instance (Num a, Num b, Num c) => Num (a,b,c) where 
+  (x,y,z) + (a,b,c) = (x+a,y+b,z+c)
+  (x,y,z) - (a,b,c) = (x-a,y-b,z-c)
+  (x,y,z) * (a,b,c) = (x*a,y*b,z*c)
+  abs (x,y,z) = (abs x, abs y, abs z)
+  signum (x,y,z) = (signum x, signum y, signum z)
+  fromInteger x = (fromInteger x,fromInteger x,fromInteger x)
 
 manhattan :: Num a => (a,a) -> a
 manhattan (x,y) = abs x + abs y

@@ -29,7 +29,7 @@ dependencies:
 ghc-options:
 # - -Wall
 # - -Wcompat
-- -O3
+# - -O3
 - -Widentities
 - -Wincomplete-record-updates
 - -Wincomplete-uni-patterns
@@ -104,6 +104,9 @@ executables:
   d17:
     <<: *day
     main: d17.hs
+  d18:
+    <<: *day
+    main: d18.hs
 
 
 tests:
