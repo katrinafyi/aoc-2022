@@ -18,11 +18,11 @@ nz = list(set([x for x,y,z in apsp]))
 nz.sort()
 nzidmap = {k: nz.index(k) for k in nz}
 nzid = lambda x: nzidmap[x]
-nzrange = range(len(nz)+1)
+nzrange = range(len(nz) + 1)
 print(nzidmap)
 
 nzsp = {(nzid(x),nzid(y)): z for x,y,z in apsp}
-print(nzsp)
+# print(nzsp)
 
 def one():
   d = sys.stdin.read()
@@ -46,7 +46,7 @@ def one():
 
   allflow = sum(flows.values())
   print(allflow)
-  print(flows)
+  # print(flows)
 
 
   def calcflow(enc):
@@ -59,9 +59,10 @@ def one():
       i += 1
     return x
 
+  succsmask = (1<< (len(nz)+1)) - 1
   # efficiently enumerate all bitwise supersets of x
   def supset(x):
-    A = (~x) & ((1<<(len(nz)+1))-1) # variable bits
+    A = (~x) & succsmask # variable bits
     B = x  # fixed bits
     sm = A
     while True:
@@ -87,9 +88,7 @@ def one():
   print('estimated size', size)
 
   # nodes only exist for the non-zero flow nodes
-  def allnodes(init=1):
-    yield (0,0,init)
-    yield from ((t,i,open) for t in range(TIME)[1:] for i in nzrange[1:] for open in supsets[init])
+  allnodes = lambda init=1: ((t,i,open) for t in range(TIME) for i in nzrange for open in supsets[init])
   endnode = (TIME,-1,-1)
   startnode = (0,0,1)
   # print([bin(x) for x in supsets[1][-10:]])
@@ -104,7 +103,8 @@ def one():
     original = open
 
     for i2 in range(len(nz)+1):
-      open,bit = divmod(open,2)
+      bit = open & 1 
+      open >>= 1
       # assert i2 <= len(nz)
 
       if i2 == i and not bit:
@@ -114,7 +114,6 @@ def one():
         if t+dt < TIME:
           yield ((t+dt,i2,original), cost * dt )
 
-  # @lru_cache(maxsize=None)
   def go(startnode, elephant=False): # returns PROFIT
 
     TOTAL = allflow * TIME
@@ -128,7 +127,7 @@ def one():
       
       if elephant and ind & ((1<<20) -1) == 0:
         t = round(time.time() - t0,2)
-        eta = round(t * size / (ind+1),2) - t
+        eta = round(t * size / (ind+1)-t,2)
         print(ind, ind/size, 'in', t, 'eta', eta, '... ', end='', flush=True)
 
       if i not in cost: continue
@@ -153,10 +152,9 @@ def one():
     return TOTAL - cost[endnode]
     # print(allflow * TIME - cost[endnode])
 
-  print(go(startnode))
-  print() 
-  print(go(startnode,True))
+  elephants = [go((0,0,x)) for x in supsets[1]]
 
+  print(elephants[1])
 
   # DP MATRIX
   #
