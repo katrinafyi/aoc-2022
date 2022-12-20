@@ -39,24 +39,25 @@ import GHC.Stack (HasCallStack)
 import System.Environment (getArgs)
 import System.Exit
 
-parse :: String -> Seq Int
-parse = Seq.fromList . fmap read . lines
+-- parse :: String -> Seq Int
+parse = fmap read . lines
 
 data S = Moved | Unmoved deriving (Eq, Show)
 
 -- assume item to be moved is at head of xs
-go :: Int -> Seq (S,Int) -> Seq (S,Int)
-go n ((Moved,x):<|xs) = go n (xs|>(Moved,x))
-go n ((Unmoved,x):<|xs)
-  | n /= x = go n (xs|>(Unmoved,x))
-  | otherwise = l >< ((Moved,x) <| r)
+go :: Int -> Seq (Int,Int) -> Seq (Int,Int)
+go n ((i,x):<|xs)
+  | n /= i = go n (xs |> (i,x))
+  | otherwise = l >< ((i,x) <| r)
   where
     len = Seq.length xs
-    d = n `mod` len
-    d' = if n < 0 then (d) `mod` len else d
-    (l,r) = Seq.splitAt d' xs
+    d = x `mod` len
+    (l,r) = Seq.splitAt d xs
 
-mix order inp = snd <$> foldl' (flip go) ((Unmoved,) <$> inp) order
+mix inp = foldl' (flip go) inp is
+  where
+    l = Seq.length inp
+    is = Seq.fromList [0..l-1]
 
 answer moved = fmap sum $ sequence $ (\x -> moved Seq.!? ((zero+x) `mod` len)) <$> ns
   where 
@@ -64,13 +65,14 @@ answer moved = fmap sum $ sequence $ (\x -> moved Seq.!? ((zero+x) `mod` len)) <
     ns = [1000,2000,3000]
     zero = fromJust $ Seq.elemIndexL 0 moved
 
-one inp = answer $ mix inp inp
+one inp = answer $ fmap snd $ mix $ Seq.fromList $ zip [0..] inp
 
 two inp = answer y
   where 
-    l = Seq.length inp
+    l = length inp
     x = fmap (*811589153) inp
-    y = iterate (mix x) x !! 10
+    in2 = Seq.fromList $ zip [0..] x
+    y = fmap snd $ iterate mix in2 !! 10
 
 main :: HasCallStack => IO ()
 main = do
