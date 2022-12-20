@@ -107,6 +107,9 @@ executables:
   d18:
     <<: *day
     main: d18.hs
+  d20:
+    <<: *day
+    main: d20.hs
 
 
 tests:

@@ -12,13 +12,14 @@ apsp = [("AA","AI",2),("AA","CJ",3),("AA","CU",8),("AA","EK",5),("AA","GU",8),("
 
 apspt = [("AA","BB",1),("AA","CC",2),("AA","DD",1),("AA","EE",2),("AA","HH",5),("AA","JJ",2),("BB","BB",0),("BB","CC",1),("BB","DD",2),("BB","EE",3),("BB","HH",6),("BB","JJ",3),("CC","BB",1),("CC","CC",0),("CC","DD",1),("CC","EE",2),("CC","HH",5),("CC","JJ",4),("DD","BB",2),("DD","CC",1),("DD","DD",0),("DD","EE",1),("DD","HH",4),("DD","JJ",3),("EE","BB",3),("EE","CC",2),("EE","DD",1),("EE","EE",0),("EE","HH",3),("EE","JJ",4),("HH","BB",6),("HH","CC",5),("HH","DD",4),("HH","EE",3),("HH","HH",0),("HH","JJ",7),("JJ","BB",3),("JJ","CC",4),("JJ","DD",3),("JJ","EE",4),("JJ","HH",7),("JJ","JJ",0)]
 
-# apsp = apspt
+apsp = apspt
 
 nz = list(set([x for x,y,z in apsp]))
 nz.sort()
 nzidmap = {k: nz.index(k) for k in nz}
+nznamemap = {nz.index(k):k for k in nz}
 nzid = lambda x: nzidmap[x]
-nzrange = range(len(nz) + 1)
+nzrange = range(len(nz))
 print(nzidmap)
 
 nzsp = {(nzid(x),nzid(y)): z for x,y,z in apsp}
@@ -72,8 +73,9 @@ def one():
     yield x
 
   succsrange = range(2**(len(nz)+1))
-  subsetflow = [calcflow(i) for i in succsrange]
-  supsets = [tuple(supset(i)) for i in succsrange]
+  # subsetflow = [calcflow(i) for i in succsrange]
+  # supsets = [tuple(supset(i)) for i in succsrange]
+  subsetflow = supsets = [[1],[1]]
 
   print(len(subsetflow))
   print(len(supsets))
@@ -114,10 +116,10 @@ def one():
         if t+dt < TIME:
           yield ((t+dt,i2,original), cost * dt )
 
+  TOTAL = allflow * TIME
   @lru_cache(maxsize=None)
   def go(startnode, elephant=False): # returns PROFIT
 
-    TOTAL = allflow * TIME
 
     cost = {startnode: 0}
     # print(list(succs(startnode)))
@@ -153,9 +155,67 @@ def one():
     return TOTAL - cost[endnode]
     # print(allflow * TIME - cost[endnode])
 
-  print(go(startnode))
-  print() 
-  print(go(startnode,True))
+  # @lru_cache(maxsize=None)
+  def orders(i, seen, t):
+    assert t >= 0
+    out = [(i,)]
+    if t == 0: return out
+
+    for i2 in nzrange:
+      if seen & (1<<i2): continue 
+      t2 = t - nzsp[i,i2] - 1
+      if t2 >= 0:
+        out.extend(( (i,) + rest for rest in orders(i2, seen | (1<<i2), t2) )) 
+    return out
+
+  # def subsetflow(xs):
+  #   return sum(flows[x] for x in xs)
+
+
+  d = 0
+  a = None
+  n = 0
+  # for order in [[nzid(x) for x in ['AA', 'DD', 'BB', 'JJ', 'HH', 'EE', 'CC']]]:
+  for order in (orders(0, 1, TIME)):
+    n += 1
+    profit = 0
+    open = 1
+    t = TIME
+    for i in range(len(order)-1):
+      i,i2 = order[i],order[i+1]
+      t -= nzsp[i,i2] + 1
+      assert t >= 0
+      profit += t * flows[i2]
+      open |= 1 << i2
+
+    profit1 = profit
+    open1 = open
+    d2 = 0
+    for order in orders(0,open1,TIME):
+      profit = 0
+      open = 1
+      t = TIME
+      for i in range(len(order)-1):
+        i,i2 = order[i],order[i+1]
+        t -= nzsp[i,i2] + 1
+        assert t >= 0
+        profit += t * flows[i2]
+        open |= 1 << i2
+      d2 = max(d2, profit)
+
+    profit = profit1 + d2
+    if profit > d: 
+      d = profit 
+      a = order
+  a = [nznamemap[i] for i in a]
+  print('num orders', n)
+  print(d, a)
+
+
+
+  # print(go(startnode))
+  # print() 
+  # print(go(startnode,True))
 
 
   # DP MATRIX
