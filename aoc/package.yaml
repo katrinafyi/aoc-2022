@@ -110,6 +110,9 @@ executables:
   d20:
     <<: *day
     main: d20.hs
+  d22:
+    <<: *day
+    main: d22.hs
 
 
 tests:
