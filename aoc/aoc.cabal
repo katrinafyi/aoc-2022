@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.0.
+-- This file has been generated from package.yaml by hpack version 0.35.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -182,6 +182,34 @@ executable d18
 
 executable d20
   main-is: d20.hs
+  hs-source-dirs:
+      app
+  ghc-options: -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      MemoTrie
+    , aoc
+    , base >=4.7 && <5
+    , containers
+    , fgl
+    , transformers
+  default-language: Haskell2010
+
+executable d22
+  main-is: d22.hs
+  hs-source-dirs:
+      app
+  ghc-options: -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      MemoTrie
+    , aoc
+    , base >=4.7 && <5
+    , containers
+    , fgl
+    , transformers
+  default-language: Haskell2010
+
+executable d23
+  main-is: d23.hs
   hs-source-dirs:
       app
   ghc-options: -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
