@@ -1,6 +1,6 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE TupleSections #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE BangPatterns #-}
 
 import AocLib
 
@@ -13,6 +13,7 @@ import Data.Set(Set)
 import qualified Data.Sequence as Seq
 import Data.Sequence(Seq ((:<|)), (|>))
 import Data.Char
+import Data.Ratio
 import Data.List
 import Data.Maybe
 import Data.Tuple
@@ -38,7 +39,7 @@ import System.IO.Unsafe (unsafePerformIO)
 import GHC.Stack (HasCallStack)
 import System.Environment (getArgs)
 import System.Exit
-import Data.Ratio
+import System.Mem
 
 type P = (Int,Int,Int)
 data BP = BP { orecost :: P, clacost :: P, obscost :: P, geocost :: P }
@@ -49,8 +50,8 @@ parse = fmap parseb . lines
 
 infeasible = minBound `div` 2 :: Int
 
-buy' :: P -> P -> Maybe (Int,P)
-buy' cost@(a,b,c) income@(ore,cla,obs) =
+buy'' :: P -> P -> Maybe (Int,P)
+buy'' cost@(a,b,c) income@(ore,cla,obs) =
   do
     ts <- zipWithM delay costs haves
     let t = maximum ts
@@ -62,6 +63,8 @@ buy' cost@(a,b,c) income@(ore,cla,obs) =
     delay x 0 | x <= 0 = Just 0
     delay _ 0 = Nothing
     delay c dc = Just $ 0 `max` ceiling (c % dc)
+
+buy' = buy''
 
 -- cost, have, income
 buy :: P -> P -> P -> Maybe (Int,P)
@@ -86,6 +89,8 @@ geodes time (BP orecost clacost obscost geocost) =
     maxore = maximum $ fmap fst3 costs
     maxcla = maximum $ fmap snd3 costs
     maxobs = maximum $ fmap thd3 costs
+
+    bound (a,b,c) = (min maxore a, min maxcla b, min maxobs c)
 
     go = memo go'
 
@@ -131,8 +136,20 @@ main = do
   -- print bp 
   print inp
   -- print $ geodes bp
-  print $ one inp
-  let t = two inp
+  let o = one inp
+  print $ o 
+  print $ answer o
+  performMajorGC
+
+  args <- fmap read <$> getArgs
+  let args2 = if null args then [0,1,2] else args
+  print args2
+  let inp2 = (inp !!) <$> args2
+  t <- forM inp2 (\b -> do
+    performMajorGC 
+    let !x = geodes 32 b
+    performMajorGC
+    pure x)
   print $ t 
   print $ product t
   
