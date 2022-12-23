@@ -113,7 +113,7 @@ geodes time (BP orecost clacost obscost geocost) =
         geobuy = buy geocost have income
 
         options1
-          | income `gt` geocost = catMaybes [make2 geobuy]
+          | isJust geobuy && 0 == fst (fromJust geobuy) = catMaybes [make2 geobuy]
           | otherwise = catMaybes
             [
               guard (dore < maxore) >> make (first3 succ) (buy orecost have income),

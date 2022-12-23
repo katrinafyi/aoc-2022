@@ -23,6 +23,9 @@ sliding n (x:xs)
   | otherwise = []
   where front = take n (x:xs)
 
+sliding2 (x:y:xs) = (x,y) : sliding2 (y:xs)
+sliding2 _ = []
+
 groupIf :: (a -> Bool) -> [a] -> [[a]]
 groupIf f = go . dropWhile nf
   where 

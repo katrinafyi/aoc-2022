@@ -70,16 +70,10 @@ elves map order = next
       Set.empty
       proposed
 
-rounds :: Int -> [[P]] -> Set P -> Either Int (Set P)
-rounds 0 _ x = Right x
-rounds n order x
-  | map' == x = Left n
-  | otherwise = rounds (n-1) order' map'
-  where
-    map' = elves x order
-    order' = tail order ++ [head order]
 
 order0 = [[u,ul,ur], [d,dl,dr], [l,ul,dl], [r,ur,dr]]
+rot (x:xs) = xs ++ [x]
+ordercycle = cycle $ take 4 $ iterate rot order0
 
 answer map = area - Set.size map
   where
@@ -87,9 +81,11 @@ answer map = area - Set.size map
     (cmin,cmax) = minmax $ Set.map snd map
     area = (rmax-rmin+1) * (cmax-cmin+1)
 
-one = answer . fromRight undefined . rounds 10 order0
+rounds inp = scanl elves inp ordercycle
 
-two inp = fromLeft undefined $ fixM (rounds (-1) order0) inp
+one = answer . (!! 10) . rounds 
+
+two inp = succ $ length $ takeWhile (uncurry (/=)) $ sliding2 (rounds inp)
 
 
 main :: HasCallStack => IO ()
