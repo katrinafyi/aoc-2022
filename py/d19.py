@@ -32,7 +32,7 @@ def robot(t=TIME, ore=0,cla=0,obs=0, dore=1, dcla=0, dobs=0):
   
   for t in TIMES[1:]:
   # if 1:
-    # print(t)
+    print(t)
     if t % 2 == 1:
       old, new = matrix, matrix2
     else:
@@ -40,10 +40,12 @@ def robot(t=TIME, ore=0,cla=0,obs=0, dore=1, dcla=0, dobs=0):
     for ore,cla,obs, dore,dcla,dobs in itertools.product(TIMES, repeat=6):
     # if 1:
       # print(ore,cla,obs,dore,dcla,dobs)
-      if max(ore+dore, cla+dcla, obs+dobs) not in TIMES:
+      if max(ore+dore, cla+dcla, obs+dobs, dore+1, dcla+1, dobs+1) not in TIMES:
         continue # impossible to hhave more resources than time.
-      options = [old[ore+dore][cla+dcla][obs+dobs][dore][dcla][dobs]]
+      robot = lambda t,ore,cla,obs,dore,dcla,dobs: old[ore][cla][obs][dore][dcla][dobs] if old[ore][cla][obs][dore][dcla][dobs] is not None else -INF
+      options = [robot(t-1,ore+dore,cla+dcla,obs+dobs,dore,dcla,dobs)]
       # options = [robot(t-1,ore+dore,cla+dcla,obs+dobs,dore,dcla,dobs)]
+
 
       ore2,cla2,obs2 = buy(ore,cla,obs, ore_cost)
       if ore2 is not None: options.append(robot(t-1,ore2+dore,cla2+dcla,obs2+dobs,dore+1,dcla,dobs))
@@ -56,7 +58,8 @@ def robot(t=TIME, ore=0,cla=0,obs=0, dore=1, dcla=0, dobs=0):
       if ore2 is not None: 
         # print(ore2,cla2,obs2)
         options.append(robot(t-1,ore2+dore,cla2+dcla,obs2+dobs,dore,dcla,dobs) + (t-1))
-      return max(options)
+      new[ore][cla][obs][dore][dcla][dobs] = max(options)
+  return new[0][0][0][1][0][0]
   
 
 def one(): 
@@ -67,7 +70,14 @@ def one():
 
   import time
 
-  for l in data: 
+  if len(sys.argv) -1 == 2:
+    a,b = list(map(int, sys.argv[1:]))
+
+  for i,l in enumerate(data): 
+    i += 1
+    if not (a <= i < b): continue
+    print(l)
+
     l = l.strip()
     if not l: continue 
     ore, clay, obs, geo = l.split('. ')
@@ -75,10 +85,11 @@ def one():
     cla_cost = (ints(clay)[0],0,0)
     obs_cost = tuple(ints(obs)) + (0,)
     geo_cost = (0,) + tuple(ints(geo))
-    t0 = time()
-    print(robot())
+    t0 = time.time()
+    x = (robot())
+    print(x, x * i)
     print(robot.cache_info())
-    print('in', time() - t0)
+    print('in', time.time() - t0)
     robot.cache_clear()
 
 if __name__ == '__main__':
