@@ -70,6 +70,9 @@ indexed2 = fmap go . indexed
   where
     go (r,row) = (\(c,x) -> ((r,c),x)) <$> indexed row
 
+minmax :: (Ord a, Foldable t) => t a -> (a,a)
+minmax x = (minimum x, maximum x)
+
 instance (Num a, Num b) => Num (a,b) where 
   (x,y) + (a,b) = (x+a,y+b)
   (x,y) - (a,b) = (x-a,y-b)

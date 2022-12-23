@@ -70,26 +70,27 @@ elves map order = next
       Set.empty
       proposed
 
-rounds :: Int -> [[P]] -> Set P -> Either (Int) (Set P)
--- rounds 0 _ x = undefined
+rounds :: Int -> [[P]] -> Set P -> Either Int (Set P)
+rounds 0 _ x = Right x
 rounds n order x
   | map' == x = Left n
   | otherwise = rounds (n-1) order' map'
-  where 
+  where
     map' = elves x order
     order' = tail order ++ [head order]
 
 order0 = [[u,ul,ur], [d,dl,dr], [l,ul,dl], [r,ur,dr]]
 
 answer map = area - Set.size map
-  where 
-    rows = Set.map fst map 
-    cols = Set.map snd map
-    area = (maximum rows - minimum rows + 1) * (maximum cols - minimum cols + 1)
+  where
+    (rmin,rmax) = minmax $ Set.map fst map
+    (cmin,cmax) = minmax $ Set.map snd map
+    area = (rmax-rmin+1) * (cmax-cmin+1)
 
-one inp = fromLeft undefined $ fixM (rounds (-1) order0) inp
+one = answer . fromRight undefined . rounds 10 order0
 
-two = id
+two inp = fromLeft undefined $ fixM (rounds (-1) order0) inp
+
 
 main :: HasCallStack => IO ()
 main = do
@@ -97,5 +98,5 @@ main = do
   -- print $ Map.size $ byCol (fst inp)
   print inp
   print $ one inp
-  -- print $ two inp
+  print $ two inp
 
