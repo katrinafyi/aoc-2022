@@ -25,6 +25,10 @@ dependencies:
 - transformers
 - fgl
 - MemoTrie
+- heap
+- hashable
+- unordered-containers
+- astar
 
 ghc-options:
 # - -Wall
@@ -119,6 +123,9 @@ executables:
   d23:
     <<: *day
     main: d23.hs
+  d24:
+    <<: *day
+    main: d24.hs
 
 
 tests:
