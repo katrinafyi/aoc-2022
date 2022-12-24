@@ -94,36 +94,6 @@ moveblizz m = m { blizz = blizz' }
       | (pos + d) `Set.member` walls m = (((pos+d-1) `xmod` (rows,cols)) + 1,d)
       | otherwise = (pos+d,d)
 
-{-
--- assumes M already has moved blizzards
-move :: M -> P -> Maybe M
-move m p
-  | p `Set.member` Set.map fst (blizz m) = Nothing
-  | otherwise = Just $ m { person = p }
--}
-
-{-
-astar :: M -> MinPrioHeap Int S -> Map S Int -> Maybe S
-astar m = \queue dists -> do
-  ((_,S pos t),queue') <- Heap.view queue
-  forM [u,d,l,r] (\x -> do
-    let old = Map.findWithDefault maxBound (pos+x) dists
-    let new = t+1
-    if new < old then 
-      undefined else undefined
-    )
-  pure 0
-  where 
-    (rmin,rmax) = minmax $ Set.map fst (walls m)
-    (cmin,cmax) = minmax $ Set.map snd (walls m)
-    rows = rmax-rmin+1-2
-    cols = cmax-cmin+1-2
-    cyclelen = lcm rows cols
-    blizzes = take cyclelen $ iterate moveblizz m
--}
-
-
-
 -- one :: M -> Int 
 go m s0 send = aStar succs dist heust goal s0
   where 
