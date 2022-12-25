@@ -126,6 +126,9 @@ executables:
   d24:
     <<: *day
     main: d24.hs
+  d25:
+    <<: *day
+    main: d25.hs
 
 
 tests:
