@@ -48,7 +48,7 @@ a essence of each day's problem.
 
 ## results 
 
-```bash
+```fortran
       --------Part 1--------   --------Part 2--------
 Day       Time   Rank  Score       Time   Rank  Score
  25      35:20   1557      0      35:28   1310      0
